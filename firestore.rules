@@ -1,0 +1,47 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- Waitlist Validation ---
+    function isValidWaitlistEntry(data) {
+      return data.keys().hasAll(['email', 'timestamp']) 
+        && data.keys().size() == 2
+        && data.email is string 
+        && data.email.size() <= 256
+        && data.email.matches('^[^@]+@[^@]+\\.[^@]+$')
+        && data.timestamp is string; // Simplified for MVP, could use server timestamp
+    }
+
+    // --- Collection: Waitlist ---
+    match /waitlist/{entryId} {
+      allow create: if isValidWaitlistEntry(incoming());
+      
+      // Only authenticated users can read/delete records
+      // The user will manually create an admin account in Firebase Auth
+      allow list: if isSignedIn();
+      allow get: if isSignedIn();
+      allow delete: if isSignedIn();
+    }
+  }
+}

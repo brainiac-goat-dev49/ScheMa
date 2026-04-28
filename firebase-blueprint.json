@@ -1,0 +1,27 @@
+{
+  "entities": {
+    "WaitlistEntry": {
+      "title": "Waitlist Entry",
+      "description": "User email captured for early access",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "User email address"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the user joined"
+        }
+      },
+      "required": ["email", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/waitlist/{entryId}": {
+      "schema": "WaitlistEntry",
+      "description": "Collection of waitlist signups"
+    }
+  }
+}
